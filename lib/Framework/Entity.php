@@ -1,0 +1,73 @@
+<?php
+
+namespace Framework;
+
+// Permet d'attribuer les valeurs aux entitées et de vérifier qu'ils possèdent une id. //
+abstract class Entity implements \ArrayAccess
+{
+    use Hydrator;
+
+    protected $erreurs = [],
+    $id;
+
+    public function __construct(array $donnees = [])
+    {
+        if (!empty($donnees))
+        {
+            $this->hydrate($donnees);
+        }
+    }
+
+    public function isNew()
+    {
+        return empty($this->id);
+    }
+
+    public function erreurs()
+    {
+        return $this->erreurs;
+    }
+
+    public function id()
+    {
+        return $this->id;
+    }
+
+    public function setId($id)
+    {
+    $this->id = (int) $id;
+    }
+
+    // Permet de récuper les variables avec les GETTERS dans les entités crées, peut être lié a la class Hydrator. //
+    public function offsetGet($var)
+    {
+        if (isset($this->$var) && is_callable([$this, $var]))
+        {
+            return $this->$var();
+        }
+    }
+
+    // Permet d'écrire les SETTERS dans les entités crées, peut être lié a la class Hydrator. //
+    public function offsetSet($var, $value)
+    {
+        $method = 'set'.ucfirst($var);
+
+        if (isset($this->$var) && is_callable([$this, $method]))
+        {
+            $this->$method($value);
+        }
+    }
+
+    public function offsetExists($var)
+    {
+        return isset($this->$var) && is_callable([$this, $var]);
+    }
+
+    public function offsetUnset($var)
+    {
+        throw new \Exception('Impossible de supprimer une quelconque valeur');
+    }
+
+}
+
+?>
